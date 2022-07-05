@@ -1,10 +1,10 @@
 {
-	"name": "VisualScriptingPrompt",
-	"references": [
+    "name": "VisualScriptingPrompt",
+    "references": [
         "Unity.VisualScripting.Core",
         "Unity.VisualScripting.Flow",
         "Unity.VisualScripting.State",
-		"Unity.VisualScripting.Core.Editor",
+        "Unity.VisualScripting.Core.Editor",
         "Unity.VisualScripting.Flow.Editor",
         "Unity.VisualScripting.State.Editor"
     ]
