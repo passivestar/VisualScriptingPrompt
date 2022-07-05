@@ -1,5 +1,11 @@
 # Visual Scripting Prompt
 
+
+
+https://user-images.githubusercontent.com/60579014/177394007-7a95e094-70d1-41fa-985d-8acce53b8f94.mov
+
+
+
 Visual scripting command prompt for better efficiency. Press Shift+Q to open. Early work in progress, use at your own risk
 
 Compatible with Unity `2022.1.x` and Visual Scripting `1.7.8`
