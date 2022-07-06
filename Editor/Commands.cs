@@ -55,6 +55,7 @@ namespace VisualScriptingPrompt
             ("subgraph:", (args, left, last) => () => Subgraphs.MakeSubgraph(args, true, true)),
             ("subgraphin:", (args, left, last) => () => Subgraphs.MakeSubgraph(args, true, false)),
             ("subgraphout:", (args, left, last) => () => Subgraphs.MakeSubgraph(args, false, true)),
+            ("subgraphnoports:", (args, left, last) => () => Subgraphs.MakeSubgraph(args, false, false)),
 
             ("valueinput:", (args, left, last) => () => {
                 var name = args[0];
