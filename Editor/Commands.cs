@@ -9,8 +9,37 @@ namespace VisualScriptingPrompt
 {
     public static class Commands
     {
+        public static (string name, Func<string[], bool, bool, Action> func) emptyCommand;
+        public static (string name, Func<string[], bool, bool, Action> func) unitCommand;
+        public static (string name, Func<string[], bool, bool, Action> func) defaultValueCommand;
+
+        static Commands()
+        {
+            emptyCommand = list.Find(command => command.name == "empty:");
+            unitCommand = list.Find(command => command.name == "unit:");
+            defaultValueCommand = list.Find(command => command.name == "defaultvalue:");
+        }
+
         public static List<(string name, Func<string[], bool, bool, Action> func)> list = new()
         {
+            ("empty:", (args, left, last) => () => {
+                var (valueInput, value) = DefaultValues.GetValueInputAndParsedValue(args);
+
+                // TODO:
+                // - String default value when no node was found
+                // - Subgraph if no node was found and string cant
+                // be assigned as a default value
+
+                if (value != null && value.GetType() != typeof(string))
+                {
+                    defaultValueCommand.func(args, left, last)();
+                }
+                else
+                {
+                    unitCommand.func(args, left, last)();
+                }
+            }),
+
             ("unit:", (args, left, last) => () => {
                 var name = args[0].ToLower();
                 var suggestionsForWord = Library.GetSuggestions(name, last ? 10 : 1);
@@ -54,6 +83,8 @@ namespace VisualScriptingPrompt
                 var graph = Ports.GetCurrentOrSelectedGraph();
                 var def = Ports.AddControlOutputDefinition(graph, name.ToLower(), name);
             }),
+
+            ("defaultvalue:", (args, left, last) => () => DefaultValues.SetDefaultValue(args)),
 
             ("vargraph:", (args, left, last) => () => Vars.MakeVariable(args, false, VariableKind.Graph)),
             ("setvargraph:", (args, left, last) => () => Vars.MakeVariable(args, true, VariableKind.Graph)),

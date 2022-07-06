@@ -116,11 +116,14 @@
     ],
 
     "commandAliases": [
+        { "from": "@", "to": "unit:" },
         { "from": "^", "to": "up:" },
 
         { "from": "sg:", "to": "subgraph:" },
         { "from": "sgin:", "to": "subgraphin:" },
         { "from": "sgout:", "to": "subgraphout:" },
+
+        { "from": "d:", "to": "defaultvalue:" },
 
         { "from": "vi:", "to": "valueinput:" },
         { "from": "vo:", "to": "valueoutput:" },

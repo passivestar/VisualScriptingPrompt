@@ -20,6 +20,7 @@ namespace VisualScriptingPrompt
         public static event Action OnOpened;
         public static event Action OnClosed;
         public static event Action OnType;
+        public static event Action OnCommandsExecuted;
 
         static Unit initialSelectedUnit;
 
@@ -93,14 +94,12 @@ namespace VisualScriptingPrompt
             // Close the prompt
             if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.Escape)
             {
-                // ClearEverything();
                 OnType?.Invoke();
                 this.Close();
                 isOpened = false;
             }
 
             OnType?.Invoke();
-            // ClearEverything();
 
             input = input.Trim();
             if (input == "") return;
@@ -126,7 +125,7 @@ namespace VisualScriptingPrompt
                 var args = "";
                 if (command.name == null)
                 {
-                    command = commands[0];
+                    command = Commands.emptyCommand;
                     args = word;
                 }
                 else
@@ -140,6 +139,7 @@ namespace VisualScriptingPrompt
             {
                 command();
             }
+            OnCommandsExecuted?.Invoke();
         }
     }
 }

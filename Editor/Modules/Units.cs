@@ -11,7 +11,6 @@ namespace VisualScriptingPrompt
     {
         static List<Unit> currentUnits = new();
 
-        public const float unitsOffset = 400f;
         public const float letterWidth = 14f;
         public const float newNodeDefaultHorizontalOffset = 180f;
 
@@ -94,8 +93,7 @@ namespace VisualScriptingPrompt
             else
             {
                 // Set position of the first unit
-                var offset = new Vector2(attachFromLeft ? -unitsOffset : unitsOffset, 0);
-                newUnit.position = canvas.pan - offset;
+                newUnit.position = context.canvas.mousePosition;
             }
 
             selection.Select(newUnit); // For chaining
