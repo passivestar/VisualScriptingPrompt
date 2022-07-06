@@ -147,6 +147,7 @@ namespace VisualScriptingPrompt
             // Literals
             shortcutUnits.Add(("1", () => new Literal(typeof(float))));
             shortcutUnits.Add(("s", () => new Literal(typeof(string))));
+            shortcutUnits.Add(("int", () => new Literal(typeof(int))));
             shortcutUnits.Add(("bool", () => new Literal(typeof(bool))));
 
             // Scalar shortcuts
