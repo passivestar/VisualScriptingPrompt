@@ -188,6 +188,15 @@ namespace VisualScriptingPrompt
             shortcutUnits.Add(("s", () => new Literal(typeof(string))));
             shortcutUnits.Add(("int", () => new Literal(typeof(int))));
             shortcutUnits.Add(("bool", () => new Literal(typeof(bool))));
+            shortcutUnits.Add(("listint", () => new Literal(typeof(List<int>))));
+            shortcutUnits.Add(("listbool", () => new Literal(typeof(List<bool>))));
+            shortcutUnits.Add(("listfloat", () => new Literal(typeof(List<float>))));
+            shortcutUnits.Add(("listvector2", () => new Literal(typeof(List<Vector2>))));
+            shortcutUnits.Add(("listvector3", () => new Literal(typeof(List<Vector3>))));
+            shortcutUnits.Add(("listquaternion", () => new Literal(typeof(List<Quaternion>))));
+            shortcutUnits.Add(("listobject", () => new Literal(typeof(List<object>))));
+            shortcutUnits.Add(("listtransform", () => new Literal(typeof(List<Transform>))));
+            shortcutUnits.Add(("listgameobject", () => new Literal(typeof(List<GameObject>))));
 
             // Scalar shortcuts
             var scalarUnits = units.Where(unit => unit.name.StartsWith("scalar")).ToList();
