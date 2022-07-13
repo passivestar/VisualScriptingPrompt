@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Unity.VisualScripting;
@@ -15,50 +16,49 @@ namespace VisualScriptingPrompt
             else return text;
         }
 
-        public static (ValueInput valueInput, object value) GetValueInputAndParsedValue(string[] args)
+        public static List<(ValueInput valueInput, object value)> GetValueInputsAndParsedValues(string[] args)
         {
-            var valueString = args[0];
-            var indexString = args.Length > 1 ? args[1] : "";
-
-            if (valueString == null) return (null, null);
-
-            // TODO:
-            // Take individual arguments instead of index
-            // to make it possible to set multiple values
-            // with one command call
-
-            int index = 0;
-            int.TryParse(indexString, out index);
-
-            var context = GraphWindow.activeContext;
-            var selection = context.selection;
+            var selection = GraphWindow.activeContext.selection;
             var unit = selection.Count != 0 ? selection.First() as Unit : null;
             if (unit != null)
             {
-                var parsedValue = ParseString(valueString);
-                var type = parsedValue.GetType();
+                List<ValueInput> takenPorts = new();
 
-                var valueInputs = unit.valueInputs.ToList()
-                    .FindAll(input =>
+                return args.Select(value =>
+                {
+                    var parsedValue = ParseString(value);
+                    var type = parsedValue.GetType();
+                    var empty = type == typeof(string) && (string)parsedValue == "";
+
+                    var valueInput = unit.valueInputs
+                        .FirstOrDefault(input =>
+                        {
+                            return input.hasDefaultValue
+                                && (input.type.IsAssignableFrom(type) || empty)
+                                && !input.hasAnyConnection
+                                && !takenPorts.Contains(input);
+                        });
+                    
+                    if (valueInput != null)
                     {
-                        return input.hasDefaultValue
-                            && input.type.IsAssignableFrom(type)
-                            && !input.hasAnyConnection;
-                    });
+                        takenPorts.Add(valueInput);
+                    }
 
-                if (index > valueInputs.Count() - 1) return (null, null);
-                var valueInput = valueInputs[index];
-                return (valueInput, parsedValue);
+                    // If the value is an empty string, skip the input
+                    return (empty ? null : valueInput, parsedValue); 
+                }).ToList();
             }
-            return (null, null);
+            return null;
         }
 
         public static void SetDefaultValue(string[] args)
         {
-            var (valueInput, value) = GetValueInputAndParsedValue(args);
-            if (value != null)
+            foreach (var (valueInput, value) in GetValueInputsAndParsedValues(args))
             {
-                valueInput.SetDefaultValue(value); 
+                if (valueInput != null && value != null)
+                {
+                    valueInput.SetDefaultValue(value);
+                }
             }
         }
     }

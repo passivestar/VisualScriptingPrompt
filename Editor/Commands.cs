@@ -23,14 +23,16 @@ namespace VisualScriptingPrompt
         public static List<(string name, Func<string[], bool, bool, Action> func)> list = new()
         {
             ("empty:", (args, left, last) => () => {
-                var (valueInput, value) = DefaultValues.GetValueInputAndParsedValue(args);
+                // TODO:
+                // Cache values
+                var inputsAndValues = DefaultValues.GetValueInputsAndParsedValues(args);
 
                 // TODO:
                 // - String default value when no node was found
                 // - Subgraph if no node was found and string cant
                 // be assigned as a default value
 
-                if (value != null && value.GetType() != typeof(string))
+                if (inputsAndValues != null && inputsAndValues.Count > 0)
                 {
                     defaultValueCommand.func(args, left, last)();
                 }
