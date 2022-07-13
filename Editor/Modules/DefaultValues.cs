@@ -45,8 +45,10 @@ namespace VisualScriptingPrompt
                     }
 
                     // If the value is an empty string, skip the input
-                    return (empty ? null : valueInput, parsedValue); 
-                }).ToList();
+                    return (valueInput: empty ? null : valueInput, parsedValue); 
+                })
+                .Where(item => item.valueInput != null)
+                .ToList();
             }
             return null;
         }

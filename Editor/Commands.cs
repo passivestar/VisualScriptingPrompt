@@ -9,15 +9,18 @@ namespace VisualScriptingPrompt
 {
     public static class Commands
     {
-        public static (string name, Func<string[], bool, bool, Action> func) emptyCommand;
-        public static (string name, Func<string[], bool, bool, Action> func) unitCommand;
-        public static (string name, Func<string[], bool, bool, Action> func) defaultValueCommand;
+        public static (string name, Func<string[], bool, bool, Action> func)
+            emptyCommand,
+            unitCommand,
+            defaultValueCommand,
+            subgraphCommand;
 
         static Commands()
         {
             emptyCommand = list.Find(command => command.name == "empty:");
             unitCommand = list.Find(command => command.name == "unit:");
             defaultValueCommand = list.Find(command => command.name == "defaultvalue:");
+            subgraphCommand = list.Find(command => command.name == "subgraph:");
         }
 
         public static List<(string name, Func<string[], bool, bool, Action> func)> list = new()
@@ -26,25 +29,24 @@ namespace VisualScriptingPrompt
                 // TODO:
                 // Cache values
                 var inputsAndValues = DefaultValues.GetValueInputsAndParsedValues(args);
+                var inputsAvailable = inputsAndValues != null && inputsAndValues.Count > 0; 
 
-                // TODO:
-                // - String default value when no node was found
-                // - Subgraph if no node was found and string cant
-                // be assigned as a default value
-
-                if (inputsAndValues != null && inputsAndValues.Count > 0)
+                if (Library.GetSuggestions(args[0], 1).Count != 0 && !inputsAvailable)
+                {
+                    unitCommand.func(args, left, last)();
+                }
+                else if (inputsAvailable)
                 {
                     defaultValueCommand.func(args, left, last)();
                 }
                 else
                 {
-                    unitCommand.func(args, left, last)();
+                    subgraphCommand.func(args, left, last)();
                 }
             }),
 
             ("unit:", (args, left, last) => () => {
-                var name = args[0].ToLower();
-                var suggestionsForWord = Library.GetSuggestions(name, last ? 10 : 1);
+                var suggestionsForWord = Library.GetSuggestions(args[0], last ? 10 : 1);
                 if (suggestionsForWord.Count != 0)
                 {
                     Units.MakeUnit(suggestionsForWord.First().func, left);
@@ -107,7 +109,6 @@ namespace VisualScriptingPrompt
             ("showall:", (args, left, last) => () => {
                 var name = args[0];
                 if (name == null) return;
-                name = name.ToLower();
                 var suggestions = Library.GetSuggestions(name, 1000).Select(suggestion => suggestion.name);
                 Debug.Log(string.Join(", ", suggestions));
             })

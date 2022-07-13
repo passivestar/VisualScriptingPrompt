@@ -24,7 +24,7 @@ namespace VisualScriptingPrompt
         public static List<(string name, Func<Unit> func)> GetSuggestions(string input, int num)
         {
             return units
-                .Where(unit => unit.name.Contains(input))
+                .Where(unit => unit.name.Contains(input.ToLower()))
                 .Take(num)
                 .ToList();
         }
