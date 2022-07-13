@@ -47,7 +47,3 @@ Edit `config.json` to add your own unit and command aliases
 - `setsv:[name]` - Set saved variable with name `name`
 
 - `^[number]` - Go up the chain `number` amount of times
-
-## Known Issues:
-
-- Object variables don't work properly
