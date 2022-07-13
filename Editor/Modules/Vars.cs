@@ -88,6 +88,11 @@ namespace VisualScriptingPrompt
             }
 
             var (source, wasDefined) = SetVariable(name, set ? valueOutput.type : valueInput.type, kind, graph);
+            if (source == null)
+            {
+                return;
+            }
+
             var variableUnit = CreateVariableUnit(name, set, kind, valueInput, valueOutput, graph, unit);
 
             currentVariables.Add((name, variableUnit as UnifiedVariableUnit, source, graph, wasDefined));
@@ -96,6 +101,8 @@ namespace VisualScriptingPrompt
         public static (VariableDeclarations source, bool wasDefined) SetVariable(string name, Type type, VariableKind kind, FlowGraph graph)
         {
             var variableValue = CreateDefaultVariableValue(type);
+            if (variableValue == null) return (null, false);
+
             VariableDeclarations source = graph.variables;
 
             switch (kind)
@@ -137,8 +144,9 @@ namespace VisualScriptingPrompt
         )
         {
             var variableUnit = set ? new SetVariable() as UnifiedVariableUnit : new GetVariable() as UnifiedVariableUnit;
-            graph.units.Add(variableUnit);
+            variableUnit.guid = Guid.NewGuid();
             variableUnit.kind = kind;
+            graph.units.Add(variableUnit);
             variableUnit.name.SetDefaultValue(name);
 
             if (set)
@@ -148,10 +156,12 @@ namespace VisualScriptingPrompt
             }
             else
             {
-                ((GetVariable)variableUnit).value.ConnectToValid(input);
+                var getVariableUnit = (GetVariable)variableUnit;
+                getVariableUnit.value.ConnectToValid(input);
                 variableUnit.position = unit.position + new Vector2(-Units.newNodeDefaultHorizontalOffset, 100f);
             }
 
+            GUI.changed = true;
             return variableUnit;
         }
 
