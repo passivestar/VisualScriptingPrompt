@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using UnityEngine;
 using UnityEditor;
 using Unity.VisualScripting;
 
@@ -37,14 +38,32 @@ namespace VisualScriptingPrompt
 
         public static void AddTypeToUnits(Type type)
         {
-            var forbiddenCharacters = new Regex(@"[\`_<>]");
+            var forbiddenCharacters = new Regex(@"[`_<>]");
             var typeInfo = type.GetTypeInfo();
+            if (
+                typeInfo.IsInterface
+                || typeInfo.IsEnum
+            ) return;
 
-            if (forbiddenCharacters.IsMatch(typeInfo.Name)) return;
+            // if (forbiddenCharacters.IsMatch(typeInfo.Name)) return;
             var ns = typeInfo.Namespace;
             if (Config.data.excludeNamespaces.Any(n => ns != null ? ns.Contains(n) : true)) return;
 
             var flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public;
+
+            // Construct the generic type with object type args
+            if (type.IsGenericType)
+            {
+                var typeArgs = type.GetGenericArguments().Select(t => typeof(object)).ToArray();
+                try
+                {
+                    type = type.MakeGenericType(typeArgs);
+                }
+                catch
+                {
+                    return;
+                }
+            }
 
             var constructors = type.GetConstructors(flags);
             var methods = type.GetMethods(flags);
@@ -54,6 +73,7 @@ namespace VisualScriptingPrompt
             // Add constructors
             foreach (var constructor in constructors)
             {
+                if (constructor.ContainsGenericParameters) continue;
                 var parameters = constructor.GetParameters().Select(p => p.ParameterType.Name);
                 var parametersString = parameters.Count() > 0 ? $"({String.Join(',', parameters)})" : "";
                 var unitName = $"{typeInfo.Name}.{constructor.Name}{parametersString}".ToLower();
@@ -63,6 +83,7 @@ namespace VisualScriptingPrompt
             // Add methods
             foreach (var method in methods)
             {
+                if (method.IsGenericMethod || method.ContainsGenericParameters) continue;
                 if (forbiddenCharacters.IsMatch(method.Name)) continue;
                 var parameters = method.GetParameters().Select(p => p.ParameterType.Name);
                 var parametersString = parameters.Count() > 0 ? $"({String.Join(',', parameters)})" : "";
@@ -102,8 +123,26 @@ namespace VisualScriptingPrompt
         {
             // Get all types derived from Unit
             Type unitType = typeof(Unit);
-            var assembly = Assembly.GetAssembly(unitType);
-            var types = assembly.GetTypes().Where(t => unitType.IsAssignableFrom(t));
+            var types = AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(t => unitType.IsAssignableFrom(t))
+                .Select(t =>
+                {
+                    if (t.IsGenericType)
+                    {
+                        var typeArgs = t.GetGenericArguments().Select(t => typeof(object)).ToArray();
+                        try
+                        {
+                            return t.MakeGenericType(typeArgs);
+                        }
+                        catch
+                        {
+                            return t;
+                        }
+                    }
+                    return t;
+                });
 
             foreach (var type in types)
             {
@@ -167,6 +206,7 @@ namespace VisualScriptingPrompt
             return shortcutUnits;
         }
 
+        [MenuItem("Window/Visual Scripting/Rebuild Node Library")]
         public static void BuildUnitsLibrary()
         {
             units.Clear();

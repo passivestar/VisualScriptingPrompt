@@ -1,6 +1,7 @@
 {
     "assemblies": [
         "mscorlib",
+        "System.Core",
         "UnityEngine.CoreModule",
         "UnityEngine.InputModule",
         "UnityEngine.PhysicsModule",
@@ -42,11 +43,11 @@
         "Unity.RenderPipelines.Universal.Runtime",
         "UnityEditor",
         "UnityEditor.UI",
-        "Cinemachine"
+        "Cinemachine",
+        "EssentialNodes"
     ],
 
     "excludeNamespaces": [
-        "System.Reflection",
         "Mono.Security",
         "Microsoft.Win32",
         "Internal.Runtime",
