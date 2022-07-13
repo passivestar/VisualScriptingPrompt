@@ -29,9 +29,10 @@ namespace VisualScriptingPrompt
                 // TODO:
                 // Cache values
                 var inputsAndValues = DefaultValues.GetValueInputsAndParsedValues(args);
-                var inputsAvailable = inputsAndValues != null && inputsAndValues.Count > 0; 
+                var inputsAvailable = inputsAndValues != null && inputsAndValues.Count > 0;
+                var nonStringInputsAvailable = inputsAvailable && inputsAndValues[0].value.GetType() != typeof(string);
 
-                if (Library.GetSuggestions(args[0], 1).Count != 0 && !inputsAvailable)
+                if (Library.GetSuggestions(args[0], 1).Count != 0 && !nonStringInputsAvailable)
                 {
                     unitCommand.func(args, left, last)();
                 }
