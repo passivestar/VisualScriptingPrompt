@@ -17,7 +17,7 @@ namespace VisualScriptingPrompt
         static Ports()
         {
             Prompt.OnOpened += () => currentPorts.Clear();
-            Prompt.OnClosed += Clear;
+            Prompt.OnCancelled += Clear;
             Prompt.OnType += Clear;
         }
 

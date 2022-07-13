@@ -18,7 +18,8 @@ namespace VisualScriptingPrompt
         public static string hintText = "";
 
         public static event Action OnOpened;
-        public static event Action OnClosed;
+        public static event Action OnConfirmed;
+        public static event Action OnCancelled;
         public static event Action OnType;
         public static event Action OnCommandsExecuted;
 
@@ -57,13 +58,13 @@ namespace VisualScriptingPrompt
 
         void OnDestroy()
         {
-            OnClosed?.Invoke();
             promptText = hintText = "";
             isOpened = false;
         }
 
         void OnLostFocus()
         {
+            OnConfirmed?.Invoke();
             this.Close();
         }
 
@@ -82,6 +83,22 @@ namespace VisualScriptingPrompt
             if (Event.current.isKey)
             {
                 if (promptText.Length == 0) hintText = $"Type unit names ({Library.units.Count} units)";
+                var e = Event.current;
+
+                if (e.keyCode == KeyCode.Escape)
+                {
+                    OnCancelled?.Invoke();
+                    this.Close();
+                    return;
+                }
+
+                if (e.keyCode == KeyCode.Return)
+                {
+                    OnConfirmed?.Invoke();
+                    this.Close();
+                    return;
+                }
+
                 ProcessCommandInput(promptText);
                 Repaint();
             }
@@ -89,16 +106,6 @@ namespace VisualScriptingPrompt
 
         void ProcessCommandInput(string input)
         {
-            var e = Event.current;
-
-            // Close the prompt
-            if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.Escape)
-            {
-                OnType?.Invoke();
-                this.Close();
-                isOpened = false;
-            }
-
             OnType?.Invoke();
 
             input = input.Trim();

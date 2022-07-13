@@ -20,7 +20,7 @@ namespace VisualScriptingPrompt
         static Vars()
         {
             Prompt.OnOpened += () => currentVariables.Clear();
-            Prompt.OnClosed += Clear;
+            Prompt.OnCancelled += Clear;
             Prompt.OnType += Clear;
         }
 

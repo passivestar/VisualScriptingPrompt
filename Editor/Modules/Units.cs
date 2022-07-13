@@ -26,7 +26,7 @@ namespace VisualScriptingPrompt
                 var selection = GraphWindow.activeContext.selection;
                 initialSelectedUnit = selection.Count != 0 ? selection.First() as Unit : null;
             };
-            Prompt.OnClosed += Clear;
+            Prompt.OnCancelled += Clear;
             Prompt.OnType += Clear;
         }
 
