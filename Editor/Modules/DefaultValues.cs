@@ -1,11 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using UnityEditor;
 using Unity.VisualScripting;
 
 namespace VisualScriptingPrompt
 {
+    [InitializeOnLoad]
     public static class DefaultValues
     {
         public static object ParseString(string text)

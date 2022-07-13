@@ -23,16 +23,12 @@ namespace VisualScriptingPrompt
         public static event Action OnType;
         public static event Action OnCommandsExecuted;
 
-        static Unit initialSelectedUnit;
-
         [MenuItem("Window/Visual Scripting/Visual Scripting Prompt #q")]
         static void Init()
         {
             if (isOpened) return;
 
             isOpened = justOpened = true;
-
-            OnOpened?.Invoke();
 
             if (GraphWindow.activeContext == null)
             {
@@ -54,6 +50,8 @@ namespace VisualScriptingPrompt
             window.minSize = new Vector2(20, 20);
             window.position = pos;
             window.ShowPopup();
+
+            OnOpened?.Invoke();
         }
 
         void OnDestroy()

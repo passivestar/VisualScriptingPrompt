@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 
 namespace VisualScriptingPrompt
 {
+    [InitializeOnLoad]
     public static class Units
     {
         static List<Unit> currentUnits = new();

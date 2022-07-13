@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEditor;
 using Unity.VisualScripting;
 
 namespace VisualScriptingPrompt
 {
+    [InitializeOnLoad]
     public static class Vars
     {
         static List<(

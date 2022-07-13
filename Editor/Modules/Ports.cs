@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using Unity.VisualScripting;
 
 namespace VisualScriptingPrompt
 {
+    [InitializeOnLoad]
     public static class Ports
     {
         const int maxLabelLength = 6;
