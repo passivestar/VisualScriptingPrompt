@@ -206,7 +206,7 @@ namespace VisualScriptingPrompt
             return shortcutUnits;
         }
 
-        [MenuItem("Window/Visual Scripting/Rebuild Node Library")]
+        [MenuItem("Window/Visual Scripting/Rebuild Prompt Node Library")]
         public static void BuildUnitsLibrary()
         {
             units.Clear();
