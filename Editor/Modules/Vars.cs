@@ -42,13 +42,14 @@ namespace VisualScriptingPrompt
             var name = args[0];
             var graph = GraphWindow.activeContext.graph as FlowGraph;
             var selection = GraphWindow.activeContext.selection;
-            var unit = selection.First() as Unit;
 
             if (selection.Count == 0)
             {
                 Debug.LogWarning("Nothing is selected");
                 return;
             }
+
+            var unit = selection.First() as Unit;
 
             ValueInput valueInput = default(ValueInput);
             ValueOutput valueOutput = default(ValueOutput);
@@ -74,7 +75,6 @@ namespace VisualScriptingPrompt
                 }
             }
 
-            // Try to determine the variable name automatically based on the port key
             if (name == null)
             {
                 name = set ? valueOutput.key : valueInput.key;
@@ -87,31 +87,17 @@ namespace VisualScriptingPrompt
                 return;
             }
 
-            // Create a GetVariable node
-            var variableUnit = set ? new SetVariable() as UnifiedVariableUnit : new GetVariable() as UnifiedVariableUnit;
-            var variableType = set ? valueOutput.type : valueInput.type;
-            var variableValue = CreateDefaultVariableValue(variableType);
+            var (source, wasDefined) = SetVariable(name, set ? valueOutput.type : valueInput.type, kind, graph);
+            var variableUnit = CreateVariableUnit(name, set, kind, valueInput, valueOutput, graph, unit);
 
-            graph.units.Add(variableUnit);
+            currentVariables.Add((name, variableUnit as UnifiedVariableUnit, source, graph, wasDefined));
+        }
 
-            variableUnit.kind = kind;
-
-            variableUnit.name.SetDefaultValue(name);
-
-            if (set)
-            {
-                ((SetVariable)variableUnit).input.ConnectToValid(valueOutput);
-                variableUnit.position = unit.position + new Vector2(Units.GetApproximateUnitWidth(unit), 0);
-            }
-            else
-            {
-                ((GetVariable)variableUnit).value.ConnectToValid(valueInput);
-                variableUnit.position = unit.position + new Vector2(-Units.newNodeDefaultHorizontalOffset, 100f);
-            }
-
+        public static (VariableDeclarations source, bool wasDefined) SetVariable(string name, Type type, VariableKind kind, FlowGraph graph)
+        {
+            var variableValue = CreateDefaultVariableValue(type);
             VariableDeclarations source = graph.variables;
 
-            // Set the variable
             switch (kind)
             {
                 case VariableKind.Graph:
@@ -132,8 +118,41 @@ namespace VisualScriptingPrompt
             }
 
             var wasDefined = source.IsDefined(name);
-            source.Set(name, variableValue);
-            currentVariables.Add((name, variableUnit, source, graph, wasDefined));
+            if (!wasDefined)
+            {
+                source.Set(name, variableValue);
+            }
+
+            return (source, wasDefined);
+        }
+
+        public static Unit CreateVariableUnit(
+            string name,
+            bool set,
+            VariableKind kind,
+            ValueInput input,
+            ValueOutput output,
+            FlowGraph graph,
+            Unit unit
+        )
+        {
+            var variableUnit = set ? new SetVariable() as UnifiedVariableUnit : new GetVariable() as UnifiedVariableUnit;
+            graph.units.Add(variableUnit);
+            variableUnit.kind = kind;
+            variableUnit.name.SetDefaultValue(name);
+
+            if (set)
+            {
+                ((SetVariable)variableUnit).input.ConnectToValid(output);
+                variableUnit.position = unit.position + new Vector2(Units.GetApproximateUnitWidth(unit), 0);
+            }
+            else
+            {
+                ((GetVariable)variableUnit).value.ConnectToValid(input);
+                variableUnit.position = unit.position + new Vector2(-Units.newNodeDefaultHorizontalOffset, 100f);
+            }
+
+            return variableUnit;
         }
 
         public static void Clear()
@@ -141,8 +160,6 @@ namespace VisualScriptingPrompt
             foreach (var variable in currentVariables)
             {
                 var (name, variableUnit, source, graph, wasDefined) = variable;
-                graph.units.Remove(variableUnit);
-
                 if (!wasDefined)
                 {
                     // VariableDeclarations type doesnt allow removing,
@@ -155,6 +172,8 @@ namespace VisualScriptingPrompt
                         source.Set(dec.name, dec.value);
                     }
                 }
+
+                graph.units.Remove(variableUnit);
             }
 
             currentVariables.Clear();
