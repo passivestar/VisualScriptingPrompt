@@ -14,14 +14,14 @@ namespace VisualScriptingPrompt
     {
         const int maxHintLength = 100;
 
-        public static List<(string name, Func<Unit> func)> units = new();
+        public static List<(string name, Func<IUnitOption> func)> units = new();
 
         static Library()
         {
             BuildUnitsLibrary();
         }
 
-        public static List<(string name, Func<Unit> func)> GetSuggestions(string input, int num)
+        public static List<(string name, Func<IUnitOption> func)> GetSuggestions(string input, int num)
         {
             return units
                 .Where(unit => unit.name.Contains(input.ToLower()))
@@ -29,7 +29,7 @@ namespace VisualScriptingPrompt
                 .ToList();
         }
 
-        public static string GetHintText(List<(string name, Func<Unit> func)> suggestions)
+        public static string GetHintText(List<(string name, Func<IUnitOption> func)> suggestions)
         {
             var list = suggestions.Select(suggestion => suggestion.name);
             var hint = string.Join(", ", list);
@@ -64,7 +64,7 @@ namespace VisualScriptingPrompt
                 var parameters = constructor.GetParameters().Select(p => p.ParameterType.Name);
                 var parametersString = parameters.Count() > 0 ? $"({String.Join(',', parameters)})" : "";
                 var unitName = $"{typeInfo.Name}.{constructor.Name}{parametersString}".ToLower();
-                units.Add((unitName, () => new InvokeMember(new Member(type, constructor))));
+                units.Add((unitName, () => new InvokeMember(new Member(type, constructor)).Option()));
             }
 
             // Add methods
@@ -75,7 +75,7 @@ namespace VisualScriptingPrompt
                 var parameters = method.GetParameters().Select(p => p.ParameterType.Name);
                 var parametersString = parameters.Count() > 0 ? $"({String.Join(',', parameters)})" : "";
                 var unitName = $"{typeInfo.Name}.{method.Name}{parametersString}".ToLower();
-                units.Add((unitName, () => new InvokeMember(new Member(type, method))));
+                units.Add((unitName, () => new InvokeMember(new Member(type, method)).Option()));
             }
 
             // Add properties
@@ -84,9 +84,9 @@ namespace VisualScriptingPrompt
                 if (forbiddenCharacters.IsMatch(property.Name)) continue;
                 var unitName = $"{typeInfo.Name}.{property.Name}".ToLower();
                 var unitSetName = $"{typeInfo.Name}.set{property.Name}".ToLower();
-                units.Add((unitName, () => new GetMember(new Member(type, property))));
+                units.Add((unitName, () => new GetMember(new Member(type, property)).Option()));
                 if (property.CanWrite && property.GetSetMethod(true).IsPublic)
-                    units.Add((unitSetName, () => new SetMember(new Member(type, property))));
+                    units.Add((unitSetName, () => new SetMember(new Member(type, property)).Option()));
             }
 
             // Add fields
@@ -95,9 +95,9 @@ namespace VisualScriptingPrompt
                 if (forbiddenCharacters.IsMatch(field.Name)) continue;
                 var unitName = $"{typeInfo.Name}.{field.Name}".ToLower();
                 var unitSetName = $"{typeInfo.Name}.set{field.Name}".ToLower();
-                units.Add((unitName, () => new GetMember(new Member(type, field))));
+                units.Add((unitName, () => new GetMember(new Member(type, field)).Option()));
                 if (!field.IsInitOnly)
-                    units.Add((unitSetName, () => new SetMember(new Member(type, field))));
+                    units.Add((unitSetName, () => new SetMember(new Member(type, field)).Option()));
             }
         }
 
@@ -118,20 +118,21 @@ namespace VisualScriptingPrompt
             foreach (var type in types)
             {
                 var name = type.ToString().Split('.').Last().ToLower();
-                units.Add((
-                    name,
-                    () =>
-                    {
-                        try
-                        {
-                            return Activator.CreateInstance(type) as Unit;
-                        }
-                        catch
-                        {
-                            return new Null();
-                        }
-                    }
-                ));
+                units.Add((name, () => ((IUnit)type.Instantiate()).Option()));
+                // units.Add((
+                //     name,
+                //     () =>
+                //     {
+                //         try
+                //         {
+                //             return Activator.CreateInstance(type) as Unit;
+                //         }
+                //         catch
+                //         {
+                //             return new Null();
+                //         }
+                //     }
+                // ));
             }
         }
 
@@ -144,9 +145,9 @@ namespace VisualScriptingPrompt
                 .ToList();
         }
 
-        public static List<(string, Func<Unit>)> GetShortcutUnits()
+        public static List<(string, Func<IUnitOption>)> GetShortcutUnits()
         {
-            var shortcutUnits = new List<(string, Func<Unit>)>();
+            var shortcutUnits = new List<(string, Func<IUnitOption>)>();
 
             // Unit Aliases
             foreach (var alias in Config.data.unitAliases)
@@ -155,20 +156,20 @@ namespace VisualScriptingPrompt
             }
 
             // Literals
-            shortcutUnits.Add(("1", () => new Literal(typeof(float))));
-            shortcutUnits.Add(("s", () => new Literal(typeof(string))));
-            shortcutUnits.Add(("int", () => new Literal(typeof(int))));
-            shortcutUnits.Add(("bool", () => new Literal(typeof(bool))));
-            shortcutUnits.Add(("listint", () => new Literal(typeof(List<int>))));
-            shortcutUnits.Add(("listbool", () => new Literal(typeof(List<bool>))));
-            shortcutUnits.Add(("listfloat", () => new Literal(typeof(List<float>))));
-            shortcutUnits.Add(("listvector2", () => new Literal(typeof(List<Vector2>))));
-            shortcutUnits.Add(("listvector3", () => new Literal(typeof(List<Vector3>))));
-            shortcutUnits.Add(("listquaternion", () => new Literal(typeof(List<Quaternion>))));
-            shortcutUnits.Add(("liststring", () => new Literal(typeof(List<string>))));
-            shortcutUnits.Add(("listobject", () => new Literal(typeof(List<object>))));
-            shortcutUnits.Add(("listtransform", () => new Literal(typeof(List<Transform>))));
-            shortcutUnits.Add(("listgameobject", () => new Literal(typeof(List<GameObject>))));
+            shortcutUnits.Add(("1", () => new Literal(typeof(float)).Option()));
+            shortcutUnits.Add(("s", () => new Literal(typeof(string)).Option()));
+            shortcutUnits.Add(("int", () => new Literal(typeof(int)).Option()));
+            shortcutUnits.Add(("bool", () => new Literal(typeof(bool)).Option()));
+            shortcutUnits.Add(("listint", () => new Literal(typeof(List<int>)).Option()));
+            shortcutUnits.Add(("listbool", () => new Literal(typeof(List<bool>)).Option()));
+            shortcutUnits.Add(("listfloat", () => new Literal(typeof(List<float>)).Option()));
+            shortcutUnits.Add(("listvector2", () => new Literal(typeof(List<Vector2>)).Option()));
+            shortcutUnits.Add(("listvector3", () => new Literal(typeof(List<Vector3>)).Option()));
+            shortcutUnits.Add(("listquaternion", () => new Literal(typeof(List<Quaternion>)).Option()));
+            shortcutUnits.Add(("liststring", () => new Literal(typeof(List<string>)).Option()));
+            shortcutUnits.Add(("listobject", () => new Literal(typeof(List<object>)).Option()));
+            shortcutUnits.Add(("listtransform", () => new Literal(typeof(List<Transform>)).Option()));
+            shortcutUnits.Add(("listgameobject", () => new Literal(typeof(List<GameObject>)).Option()));
 
             // Scalar shortcuts
             var scalarUnits = units.Where(unit => unit.name.StartsWith("scalar")).ToList();
@@ -181,7 +182,7 @@ namespace VisualScriptingPrompt
             var graphAssets = FindAssetsByType<ScriptGraphAsset>();
             foreach (var asset in graphAssets)
             {
-                shortcutUnits.Add(("#" + asset.ToString().ToLower(), () => new SubgraphUnit(asset)));
+                shortcutUnits.Add(("#" + asset.ToString().ToLower(), () => new SubgraphUnit(asset).Option()));
             }
 
             return shortcutUnits;
