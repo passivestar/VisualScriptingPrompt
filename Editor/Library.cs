@@ -42,28 +42,15 @@ namespace VisualScriptingPrompt
             var typeInfo = type.GetTypeInfo();
             if (
                 typeInfo.IsInterface
+                || typeInfo.IsGenericType
                 || typeInfo.IsEnum
             ) return;
 
-            // if (forbiddenCharacters.IsMatch(typeInfo.Name)) return;
+            if (forbiddenCharacters.IsMatch(typeInfo.Name)) return;
             var ns = typeInfo.Namespace;
             if (Config.data.excludeNamespaces.Any(n => ns != null ? ns.Contains(n) : true)) return;
 
             var flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public;
-
-            // Construct the generic type with object type args
-            if (type.IsGenericType)
-            {
-                var typeArgs = type.GetGenericArguments().Select(t => typeof(object)).ToArray();
-                try
-                {
-                    type = type.MakeGenericType(typeArgs);
-                }
-                catch
-                {
-                    return;
-                }
-            }
 
             var constructors = type.GetConstructors(flags);
             var methods = type.GetMethods(flags);
@@ -126,23 +113,7 @@ namespace VisualScriptingPrompt
             var types = AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
-                .Where(t => unitType.IsAssignableFrom(t))
-                .Select(t =>
-                {
-                    if (t.IsGenericType)
-                    {
-                        var typeArgs = t.GetGenericArguments().Select(t => typeof(object)).ToArray();
-                        try
-                        {
-                            return t.MakeGenericType(typeArgs);
-                        }
-                        catch
-                        {
-                            return t;
-                        }
-                    }
-                    return t;
-                });
+                .Where(t => unitType.IsAssignableFrom(t));
 
             foreach (var type in types)
             {
