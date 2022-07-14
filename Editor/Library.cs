@@ -165,6 +165,7 @@ namespace VisualScriptingPrompt
             shortcutUnits.Add(("listvector2", () => new Literal(typeof(List<Vector2>))));
             shortcutUnits.Add(("listvector3", () => new Literal(typeof(List<Vector3>))));
             shortcutUnits.Add(("listquaternion", () => new Literal(typeof(List<Quaternion>))));
+            shortcutUnits.Add(("liststring", () => new Literal(typeof(List<string>))));
             shortcutUnits.Add(("listobject", () => new Literal(typeof(List<object>))));
             shortcutUnits.Add(("listtransform", () => new Literal(typeof(List<Transform>))));
             shortcutUnits.Add(("listgameobject", () => new Literal(typeof(List<GameObject>))));
