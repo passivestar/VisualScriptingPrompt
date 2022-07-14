@@ -33,6 +33,7 @@ namespace VisualScriptingPrompt
             if (GraphWindow.activeContext == null)
             {
                 Debug.LogWarning("Unable to find active context.");
+                isOpened = justOpened = false;
                 return;
             }
 
