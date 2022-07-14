@@ -89,6 +89,7 @@
         { "from": "texit", "to": "ontriggerexit" },
         { "from": "event", "to": "customevent" },
         { "from": "trigger", "to": "triggercustomevent" },
+        { "from": "log", "to": "debug.log(object)" },
         { "from": "2", "to": "vector2..ctor(single,single)" },
         { "from": "3", "to": "vector3..ctor(single,single,single)" },
         { "from": "4", "to": "quaternion.euler(single,single,single)" },
