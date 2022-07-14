@@ -41,6 +41,8 @@ namespace VisualScriptingPrompt
 
         public static void MakeVariable(string[] args, bool set, VariableKind kind = VariableKind.Graph)
         {
+            // TODO: Support any number of variables in one command
+
             var name = args[0];
             var graph = GraphWindow.activeContext.graph as FlowGraph;
             var selection = GraphWindow.activeContext.selection;
@@ -145,25 +147,54 @@ namespace VisualScriptingPrompt
             Unit unit
         )
         {
-            var variableUnit = set ? new SetVariable() as UnifiedVariableUnit : new GetVariable() as UnifiedVariableUnit;
+            var context = GraphWindow.activeContext;
+            var canvas = context.canvas;
+            var selection = context.selection;
+
+            context.BeginEdit();
+
+            UnifiedVariableUnit variableUnit;
+
+            if (set)
+            {
+                var variableUnitOption = new SetVariableOption(kind, name);
+                variableUnit = (UnifiedVariableUnit)variableUnitOption.InstantiateUnit();
+                variableUnitOption.PreconfigureUnit(variableUnit as SetVariable);
+            }
+            else
+            {
+                var variableUnitOption = new GetVariableOption(kind, name);
+                variableUnit = (UnifiedVariableUnit)variableUnitOption.InstantiateUnit();
+                variableUnitOption.PreconfigureUnit(variableUnit as GetVariable);
+            }
+
             variableUnit.guid = Guid.NewGuid();
-            variableUnit.kind = kind;
             graph.units.Add(variableUnit);
-            variableUnit.name.SetDefaultValue(name);
+            selection.Select(variableUnit);
+
+            canvas.Cache();
+
+            var selectedWidget = canvas.Widget(unit);
+            var newWidget = canvas.Widget(variableUnit);
 
             if (set)
             {
                 ((SetVariable)variableUnit).input.ConnectToValid(output);
-                variableUnit.position = unit.position + new Vector2(Units.GetApproximateUnitWidth(unit), 0);
+                Util.PositionNewWidget(newWidget, selectedWidget, false);
             }
             else
             {
-                var getVariableUnit = (GetVariable)variableUnit;
-                getVariableUnit.value.ConnectToValid(input);
-                variableUnit.position = unit.position + new Vector2(-Units.newNodeDefaultHorizontalOffset, 100f);
+                ((GetVariable)variableUnit).value.ConnectToValid(input);
+                Util.PositionNewWidget(newWidget, selectedWidget, true);
             }
 
+            Util.SpaceWidgetOut(newWidget, canvas);
+
+            canvas.Cache();
             GUI.changed = true;
+            Event.current?.TryUse();
+            context.EndEdit();
+
             return variableUnit;
         }
 

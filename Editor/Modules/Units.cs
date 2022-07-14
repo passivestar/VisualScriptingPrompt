@@ -12,9 +12,6 @@ namespace VisualScriptingPrompt
     {
         static List<Unit> currentUnits = new();
 
-        public const float letterWidth = 14f;
-        public const float newNodeDefaultHorizontalOffset = 180f;
-
         public static Unit initialSelectedUnit;
 
         public static event Action<Unit> OnUnitCreated;
@@ -31,29 +28,7 @@ namespace VisualScriptingPrompt
             Prompt.OnType += Clear;
         }
 
-        public static float GetApproximatePortWidth(IUnitPort port)
-        {
-            var key = port.key;
-            if (key == "target") return 120f;
-            if (key.StartsWith("%")) return 120f + key.Length * letterWidth;
-            return key.Length * letterWidth;
-        }
-
-        public static float GetApproximateUnitWidth(Unit unit)
-        {
-            var width = 0f;
-            if (unit.inputs.Count() > 0)
-            {
-                width += unit.inputs.Max(GetApproximatePortWidth);
-            }
-            if (unit.outputs.Count() > 0)
-            {
-                width += unit.outputs.Max(GetApproximatePortWidth);
-            }
-            return Mathf.Max(newNodeDefaultHorizontalOffset, width);
-        }
-
-        public static Unit MakeUnit(Func<Unit> func, bool attachFromLeft = false)
+        public static Unit MakeUnit(Func<IUnitOption> func, bool attachFromLeft = false)
         {
             var context = GraphWindow.activeContext;
             var selection = context.selection;
@@ -61,8 +36,14 @@ namespace VisualScriptingPrompt
             var graph = context.graph as FlowGraph;
             var canvas = context.canvas;
 
-            var newUnit = func();
+            context.BeginEdit();
+            var option = func();
+            var newUnit = (Unit)option.InstantiateUnit();
+            option.PreconfigureUnit(newUnit);
+            newUnit.guid = Guid.NewGuid();
+
             graph.units.Add(newUnit);
+            selection.Select(newUnit); // For chaining
 
             if (selectedUnit != null)
             {
@@ -76,10 +57,13 @@ namespace VisualScriptingPrompt
                     attachFromLeft = true;
                 }
 
-                // Set position
-                var offsetX = attachFromLeft ? -newNodeDefaultHorizontalOffset : GetApproximateUnitWidth(selectedUnit);
-                var offsetY = attachFromLeft ? 100f : 0;
-                newUnit.position = selectedUnit.position + new Vector2(offsetX, offsetY);
+                canvas.Cache();
+
+                var selectedWidget = canvas.Widget(selectedUnit);
+                var newWidget = canvas.Widget(newUnit);
+
+                Util.PositionNewWidget(newWidget, selectedWidget, attachFromLeft);
+                Util.SpaceWidgetOut(newWidget, canvas);
 
                 // Connect units
                 if (attachFromLeft)
@@ -97,8 +81,13 @@ namespace VisualScriptingPrompt
                 newUnit.position = context.canvas.mousePosition;
             }
 
-            selection.Select(newUnit); // For chaining
             currentUnits.Add(newUnit);
+
+            canvas.Cache();
+            GUI.changed = true;
+            Event.current?.TryUse();
+            context.EndEdit();
+
             OnUnitCreated?.Invoke(newUnit);
 
             return newUnit;
