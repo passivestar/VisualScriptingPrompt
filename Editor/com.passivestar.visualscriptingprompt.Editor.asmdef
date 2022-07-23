@@ -1,5 +1,5 @@
 {
-    "name": "VisualScriptingPrompt",
+    "name": "com.passivestar.visualscriptingprompt.Editor",
     "references": [
         "Unity.VisualScripting.Core",
         "Unity.VisualScripting.Flow",
