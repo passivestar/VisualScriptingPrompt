@@ -20,7 +20,7 @@ namespace VisualScriptingPrompt
                 {
                     Ports.AddControlOutputDefinition(subgraph, "exit", "Exit");
                 }
-                return unit;
+                return unit.Option();
             });
         }
     }
